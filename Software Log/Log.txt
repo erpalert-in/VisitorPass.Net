@@ -1,3 +1,13 @@
+ 'Log File of Source Code
+'Develpers or Users Must fill up the Following 
+'1. SCN No # Change Request number
+'2. Source Modified Date
+'3. Source Updated Date
+'4. Version
+'5. Database name
+'6. Source Updated By
+'7. Purpose
+
 '1. SCN No # Change Request number - P23006
 '2. Source Modified Date - 29-Dec-25
 '3. Source Updated Date - 29-Dec-25
