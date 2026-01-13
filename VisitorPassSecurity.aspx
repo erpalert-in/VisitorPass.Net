@@ -203,6 +203,8 @@
         #rgVisitorLog a {
             color: blue !important;
         }
+
+
     </style>
     <script>
         const visitorId = document.getElementById("visitorIdText").textContent;
@@ -287,6 +289,30 @@
                 });
             });
         });
+    </script>
+    <script>
+        function generateBarcode(visitorId) {
+            // Create an SVG element dynamically
+            var svg = document.createElement("svg");
+            document.getElementById("barcodeBox").innerHTML = ""; // clear old
+            document.getElementById("barcodeBox").appendChild(svg);
+
+            // Generate barcode
+            JsBarcode(svg, visitorId, {
+                format: "CODE128",
+                lineColor: "#000",
+                width: 2,
+                height: 50,
+                displayValue: true
+            });
+        }
+
+        // Example: call after binding visitor data
+        // Suppose visitorIdText span already has value
+        var visitorId = document.getElementById("visitorIdText").innerText;
+        if (visitorId) {
+            generateBarcode(visitorId);
+        }
     </script>
 
 
@@ -500,13 +526,28 @@
         <div class="title">Visitor Pass</div>
         <div id="photoBox">Photo</div>
         <div class="details">
-            Visitor ID : <span id="visitorIdText">VP25001</span><br>
-            Name : ISHWARYA<br>
-            Purpose : Vendor Visit<br>
-            Valid Until : 24-Dec-2025
+            <p>
+                <label for="visitorIdText">Visitor ID :</label>
+                <span id="visitorIdText" runat="server"></span>
+            </p>
+            <p>
+                <label for="visitorNameSpan">Name :</label>
+                <span id="visitorNameSpan" runat="server"></span>
+            </p>
+            <p>
+                <label for="visitorCompanySpan">Company :</label>
+                <span id="visitorCompanySpan" runat="server"></span>
+            </p>
+            <p>
+                <label for="visitorPurpose">Purpose :</label>
+                <span id="visitorPurpose" runat="server"></span>
+            </p>
+            <!-- Barcode placeholder -->
+            <div id="barcodeBox"></div>
         </div>
-        <svg id="barcode"></svg>
     </div>
+
+
 
     <input type="file" id="photoInput" accept="image/*" />
 
@@ -572,5 +613,4 @@
             height: 40
         });
     </script>
-
 </asp:Content>

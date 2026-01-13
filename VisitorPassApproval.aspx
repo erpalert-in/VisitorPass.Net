@@ -161,6 +161,11 @@
             color: #000 !important;
         }
 
+        .readonly-checkbox {
+            pointer-events: none; /* disables mouse interaction */
+            opacity: 1; /* keeps normal look (remove grayed-out effect) */
+        }
+
         /* Button styling */
         button,
         .RadButton_Default {
@@ -255,6 +260,14 @@
             cursor: default; /* normal cursor */
             opacity: 1; /* ensure full visibility */
         }
+
+        
+        /* Example CSS */
+        .grid-header {
+            background-color: lavender !important; /* Lavender color */
+            color: #000; /* Optional: Adjust text color for better contrast */
+        }
+
 
         /* For Telerik RadCheckBox specifically */
         .RadCheckBox.readonly-checkbox .rcText,
@@ -410,18 +423,20 @@
                 <telerik:RadTextBox ID="txtRequestedBy" runat="server" ReadOnly="true" Width="100%" />
 
                 <label for="RadTextBox3">Meals Option</label>
-                <telerik:RadCheckBox ID="chkBreakfast" runat="server" Text="Breakfast" />
-                <telerik:RadCheckBox ID="chkDinner" runat="server" Text="Dinner" />
-                <telerik:RadCheckBox ID="chkLunch" runat="server" Text="Lunch" />
+                <telerik:RadCheckBox ID="chkBreakfast" runat="server" Text="Breakfast" CssClass="readonly-checkbox" />
+                <telerik:RadCheckBox ID="chkDinner" runat="server" Text="Dinner" CssClass="readonly-checkbox" />
+                <telerik:RadCheckBox ID="chkLunch" runat="server" Text="Lunch" CssClass="readonly-checkbox" />
+
 
                 <label for="RadTextBox4">Cab Arrangements </label>
-                <telerik:RadCheckBox ID="RadCheckBox1" runat="server" Text="Required" />
-                <telerik:RadCheckBox ID="RadCheckBox2" runat="server" Text="Not Required" />
-                <div>
-                    <label for="RadTextBox6">Destination:</label>
-                    <telerik:RadTextBox ID="RadTextBox6" runat="server" Width="100%" />
+                <telerik:RadCheckBox ID="RadCheckBox1" runat="server" Text="Required" CssClass="readonly-checkbox" />
+                <telerik:RadCheckBox ID="RadCheckBox2" runat="server" Text="Not Required" CssClass="readonly-checkbox" />
 
+                <div>
+                    <label for="txtDestination">Destination:</label>
+                    <telerik:RadTextBox ID="txtDestination" runat="server" Width="100%" ReadOnly="true" />
                 </div>
+
             </div>
         </div>
 
@@ -442,7 +457,7 @@
                     <h2>Approval Workflow</h2>
                     <!-- Status Indicator -->
                     <label for="purpose">Status Indicator</label>
-                    <telerik:RadTextBox ID="txtStatus" runat="server" ReadOnly="true" Text="Pending" Width="100%" />
+                    <telerik:RadTextBox ID="txtStatus" runat="server" ReadOnly="true" Text="Waiting for approval" Width="100%" />
                     <!-- Admin Notes -->
                     <label for="purpose">Admin Notes (Optional)</label>
                     <telerik:RadTextBox ID="txtAdminNotes" runat="server" TextMode="MultiLine" Rows="2" Width="100%" />
@@ -458,10 +473,15 @@
 
                     <div class="form-row">
                         <label>Host Approval</label>
-                        <div class="radio-group">
-                            <telerik:RadRadioButton ID="approved" GroupName="approval" Text="Approved" CssClass="radio-option" runat="server" />
-                            <telerik:RadRadioButton ID="rejected" GroupName="approval" Text="Rejected" CssClass="radio-option" runat="server" />
+                        <div>
+                            <telerik:RadRadioButtonList runat="server" ID="RadioOpen" Style="display: flex; justify-content: center; position: relative; gap: 20px">
+                                <Items>
+                                    <telerik:ButtonListItem Text="Approved" Selected="true" Value="1" />
+                                    <telerik:ButtonListItem Text="Rejected" Value="2" />
+                                </Items>
+                            </telerik:RadRadioButtonList>
                         </div>
+
                     </div>
 
                     <div class="form-grid-2">
@@ -588,16 +608,16 @@
                 </Columns>
             </MasterTableView>
         </telerik:RadGrid>
-       </div>
-        <telerik:RadWindowManager ID="RadWindowManager3" runat="server">
+    </div>
+    <telerik:RadWindowManager ID="RadWindowManager3" runat="server">
         <Windows>
-            <telerik:RadWindow ID="RadWindow2" runat="server" Modal="false" Width="392px" Height="520px" Font-Bold="true"  VisibleOnPageLoad="false" InitialBehaviors="Pin" Left="1684" Top="250px">
+            <telerik:RadWindow ID="RadWindow2" runat="server" Modal="false" Width="392px" Height="520px" Font-Bold="true" VisibleOnPageLoad="false" InitialBehaviors="Pin" Left="1500" Top="250px">
 
                 <ContentTemplate>
                     <telerik:RadGrid ID="RadGrid2" runat="server" AllowPaging="True" PageSize="10"
                         AllowSorting="True" AutoGenerateColumns="False"
                         AllowFilteringByColumn="false"
-                        OnNeedDataSource="RadGrid2_NeedDataSource" 
+                        OnNeedDataSource="RadGrid2_NeedDataSource"
                         OnItemDataBound="RadGrid2_ItemDataBound"
                         GroupingSettings-CaseSensitive="false">
                         <GroupingSettings CollapseAllTooltip="Collapse all groups" />
@@ -614,9 +634,9 @@
                             <CommandItemTemplate>
                             </CommandItemTemplate>
                             <Columns>
-                                <telerik:GridBoundColumn DataField="FormID" HeaderText="FormID" UniqueName="FormID" HeaderStyle-Width="80px" ReadOnly="true" >
+                                <telerik:GridBoundColumn DataField="FormID" HeaderText="FormID" UniqueName="FormID" HeaderStyle-Width="80px" ReadOnly="true">
                                 </telerik:GridBoundColumn>
-                                <telerik:GridBoundColumn DataField="VisitorName" HeaderText="VisitorName" UniqueName="VisitorName" HeaderStyle-Width="80px" ReadOnly="true" >
+                                <telerik:GridBoundColumn DataField="VisitorName" HeaderText="VisitorName" UniqueName="VisitorName" HeaderStyle-Width="80px" ReadOnly="true">
                                 </telerik:GridBoundColumn>
                                 <telerik:GridBoundColumn DataField="slno" HeaderText="slno" UniqueName="slno" HeaderStyle-Width="80px" ReadOnly="true" Display="false">
                                 </telerik:GridBoundColumn>
@@ -630,10 +650,6 @@
         </Windows>
     </telerik:RadWindowManager>
 
-
-   
-
-    
 
 
     <script>
