@@ -233,11 +233,13 @@ public partial class VisitorPassApproval : System.Web.UI.Page
 
     protected void signature_TextChanged(object sender, EventArgs e)
     {
-        if ((approved.Checked != true) && (rejected.Checked != true))
+        if (RadioOpen.SelectedValue == "1" && RadioOpen.SelectedValue == "2")
         {
             RadWindowManager1.RadAlert("Please select Approved or Rejected.", 300, 200, "Validation", null);
             return;
         }
+
+
 
         LblEmpty.Text = "";
         RadWindow1.VisibleOnPageLoad = true;
@@ -245,7 +247,7 @@ public partial class VisitorPassApproval : System.Web.UI.Page
 
     protected void BtnValidatePin_Click(object sender, EventArgs e)
     {
-        if (approved.Checked == true)
+        if (RadioOpen.SelectedValue == "1")
         {
             LblEmpty.Text = string.Empty;
             SqlConnection.Close();
@@ -327,8 +329,8 @@ public partial class VisitorPassApproval : System.Web.UI.Page
                 SqlCommand.CommandText = "select * From EmpPersonnel_Master where EmpCode='" + signature.Text + "'";
                 SqlCommand.Connection = SqlConnection;
                 SqlDataReader drsss = SqlCommand.ExecuteReader();
-                try
-                {
+                //try
+                //{
                     if (drsss.HasRows)
                     {
                         drsss.Read();
@@ -337,7 +339,17 @@ public partial class VisitorPassApproval : System.Web.UI.Page
                         SqlConnection.Close();
                         SqlConnection.Open();
                         string UpdateQuery = "Update  TblVisitorPass_Request set Approved_by = '" + TestConductBy + "', Status = 'A', Approver_Cmts = '" + txtAdminNotes.Text + "' where FormID='" + RadAutoCompleteBox1.Text + "'";
-                        SqlCommand.CommandText = UpdateQuery;
+                        ConvertChildToParent(connectionString, RadAutoCompleteBox1.Text);
+                        string visitorName = txtFullName.Text;
+                        string visitorCompany = txtCompany.Text;
+                        string personToMeet = txtRequestedBy.Text;
+                        string Visitorid = RadAutoCompleteBox1.Text;
+                        DateTime visitFrom = DateTime.Parse(visitdatefrom.Text);
+
+
+
+                    sendalerttoHr(visitorName, visitorCompany, personToMeet, Visitorid, visitFrom);
+                    SqlCommand.CommandText = UpdateQuery;
                         SqlCommand.Connection = SqlConnection;
                         SqlCommand.ExecuteNonQuery();
                         signature.Enabled = false;
@@ -345,15 +357,18 @@ public partial class VisitorPassApproval : System.Web.UI.Page
                         DisableFormControls();
                         txtAdminNotes.Enabled = false;
                         Funclear();
-                    }
-                }
-                catch (Exception ex) { }
+                        ShowMessage ("Data Approved Successfully");
+                        RadAutoCompleteBox1.Entries.Clear();
+                        signature.Text = "";
+                        txtAdminNotes.Text = "";
+                    }     
+
                 RadWindow1.VisibleOnPageLoad = false;
                 RadWindow2.VisibleOnPageLoad = false;
             }
         }
 
-        if (rejected.Checked == true)
+        if (RadioOpen.SelectedValue == "2")
         {
             LblEmpty.Text = string.Empty;
             SqlConnection.Close();
@@ -452,12 +467,223 @@ public partial class VisitorPassApproval : System.Web.UI.Page
                         RadGrid1.Rebind();
                         DisableFormControls();
                         Funclear();
+                        ShowMessage("Data Dis-Approved Successfully");
+                        RadAutoCompleteBox1.Entries.Clear();
+                        signature.Text = "";
+                        txtAdminNotes.Text = "";
                     }
                 }
                 catch (Exception ex) { }
                 RadWindow1.VisibleOnPageLoad = false;
             }
         }
+    }
+
+    // Define a helper class for child records
+    public class ChildRecord
+    {
+        public string FormID { get; set; }
+        public string VisitorName { get; set; }
+    }
+
+    private void sendalerttoHr(string visitorName, string visitorCompany, string personToMeet, string Visitorid, DateTime visitFrom)
+    {
+        // Get last message number
+        DataTable dt = GetTable("SELECT TOP 1 Msg_No FROM EMails_Undelivered ORDER BY Msg_Slno DESC");
+        int inc = 1;
+        if (dt != null && dt.Rows.Count > 0)
+        {
+            if (dt.Rows[0]["Msg_No"] != DBNull.Value)
+            {
+                inc = Convert.ToInt32(dt.Rows[0]["Msg_No"]) + 1;
+            }
+
+        }
+
+        // Get HR recipient email
+        DataTable dtTable = GetTable("SELECT EMailID FROM VisitorPass_Approval_Config WHERE Teamcode = 'HR'");
+        if (dtTable != null && dtTable.Rows.Count > 0)
+        {
+            string recipientEmail = Convert.ToString(dtTable.Rows[0]["EMailID"]);
+            InsertApprovalEmail(visitorName, visitorCompany, personToMeet, recipientEmail, Visitorid, inc, visitFrom);
+        }
+    }
+
+
+
+    private void InsertApprovalEmail(string visitorName, string visitorCompany, string personToMeet, string recipientEmail, string Visitorid, int inc, DateTime visitFrom)
+    {
+        string msgSubject = "Visitor Arrival Notification";
+        string formattedDate = visitFrom.ToString("dd-MMM-yyyy");
+        string msgText = "<HTML><BODY>"
+                       + "Dear HR,<br/><br/>"
+                       + "This is to inform you that a visitor is scheduled to arrive at our premises.<br/><br/>"
+                       + "<b>Visitor ID:</b> " + Visitorid + "<br/>"
+                       + "<b>Visitor Name:</b> " + visitorName + "<br/>"
+                       + "<b>Visitor Company:</b> " + visitorCompany + "<br/>"
+                       + "<b>Person To Meet:</b> " + personToMeet + "<br/>"
+                       + "<b>Visit Date:</b> " + formattedDate + "<br/>"
+                       + "Please review and make necessary arrangements if needed.<br/><br/>"
+                       + "Thank you,<br/>"
+                       + "Visitor Management System<br/>"
+                       + "</BODY></HTML>";
+
+        using (SqlConnection conn = new SqlConnection(connectionString))
+        {
+            conn.Open();
+
+            using (SqlCommand cmd = new SqlCommand(@"INSERT INTO EMails_Undelivered
+            (Msg_No, Msg_FromName, Msg_Recipient, Msg_Subject, Msg_Text, Msg_RecDateTime, Msg_Status, Msg_Module, Msg_FormName, Msg_FuncName)
+            VALUES (@Msg_No, @Msg_FromName, @Msg_Recipient, @Msg_Subject, @Msg_Text, @Msg_RecDateTime, @Msg_Status, @Msg_Module, @Msg_FormName, @Msg_FuncName)", conn)) // ✅ Pass connection here
+            {
+                cmd.Parameters.AddWithValue("@Msg_No", inc);
+                cmd.Parameters.AddWithValue("@Msg_FromName", "Urjita ERP Alerter");
+                cmd.Parameters.AddWithValue("@Msg_Recipient", recipientEmail);
+                cmd.Parameters.AddWithValue("@Msg_Subject", msgSubject);
+                cmd.Parameters.AddWithValue("@Msg_Text", msgText);
+                cmd.Parameters.AddWithValue("@Msg_RecDateTime", DateTime.Now);
+                cmd.Parameters.AddWithValue("@Msg_Status", 0);
+                cmd.Parameters.AddWithValue("@Msg_Module", "VisitorPass.Net");
+                cmd.Parameters.AddWithValue("@Msg_FormName", "VisitorPassEntry.aspx");
+                cmd.Parameters.AddWithValue("@Msg_FuncName", "InsertApprovalEmail");
+
+                cmd.ExecuteNonQuery();
+            }
+        }
+    }
+    public void ConvertChildToParent(string connectionString, string formID)
+    {
+        using (SqlConnection cn = new SqlConnection(connectionString))
+        {
+            cn.Open();
+
+            // Step 1: Load child records into memory
+            List<ChildRecord> childRecords = new List<ChildRecord>();
+            string childQuery = "SELECT FormID, VisitorName FROM tbl_VisitorPass_member_temp WHERE FormID LIKE @FormID";
+
+            using (SqlCommand cmdChild = new SqlCommand(childQuery, cn))
+            {
+                cmdChild.Parameters.AddWithValue("@FormID", "%" + formID + "%");
+                using (SqlDataReader rschild = cmdChild.ExecuteReader())
+                {
+                    while (rschild.Read())
+                    {
+                        childRecords.Add(new ChildRecord
+                        {
+                            FormID = rschild["FormID"].ToString(),
+                            VisitorName = rschild["VisitorName"].ToString()
+                        });
+                    }
+                }
+            }
+
+            // Step 2: Loop through child records
+            foreach (ChildRecord child in childRecords)
+            {
+                string parentQuery = "SELECT * FROM TblVisitorPass_Request WHERE FormID = @FormID";
+                using (SqlCommand cmdParent = new SqlCommand(parentQuery, cn))
+                {
+                    cmdParent.Parameters.AddWithValue("@FormID", formID);
+
+                    using (SqlDataReader rsparent = cmdParent.ExecuteReader())
+                    {
+                        if (rsparent.Read())
+                        {
+                            // Copy parent values into local variables
+                            var visitorCompany = rsparent["VisitorCompany"];
+                            var purposeOfVisit = rsparent["Purpose_of_Visit"];
+                            var typeForVisit = rsparent["Type_for_Visit"];
+                            var personToMeet = rsparent["Person_to_Meet"];
+                            var teamcode = rsparent["Teamcode"];
+                            var visitFromTime = rsparent["Visit_FromTime"];
+                            var visitToTime = rsparent["Visit_ToTime"];
+                            var visitTime = rsparent["Visit_Time"];
+                            var expectedDuration = rsparent["Expected_Duration"];
+                            var detailsOfAccessories = rsparent["Details_of_accessories"];
+                            var legalIdProof = rsparent["Legal_ID_proof"];
+                            var noOfVisitors = rsparent["No_of_Visitors"];
+                            var accessLevel = rsparent["AccessLevel"];
+                            var restrictedArea = rsparent["Restricted_Area"];
+                            var enteredDateTime = rsparent["Entered_DateTime"];
+                            var status = "A";
+                            var breakfast = rsparent["Breakfast"];
+                            var lunch = rsparent["Lunch"];
+                            var dinner = rsparent["Dinner"];
+                            var cabRequired = rsparent["CabRequired"];
+                            var cabNotRequired = rsparent["CabNotRequired"];
+                            var destination = rsparent["Destination"];
+                            var approvedBy = rsparent["Approved_by"];
+                            var empcode = rsparent["Empcode"];
+                            var approverCmts = rsparent["Approver_Cmts"];
+                            var validity = rsparent["Validity"];
+                            var entryFlag = rsparent["Entry_Flag"];
+                            var confirmExit = rsparent["ConfirmExit"];
+
+                            rsparent.Close();
+
+                            // Insert new record
+                            string insertQuery = @"
+                            INSERT INTO TblVisitorPass_Request
+                            (FormID, VisitorName, VisitorCompany, Purpose_of_Visit, Type_for_Visit, Person_to_Meet, Teamcode,
+                             Visit_FromTime, Visit_ToTime, Visit_Time, Expected_Duration, Details_of_accessories, Legal_ID_proof,
+                             No_of_Visitors, AccessLevel, Restricted_Area, Entered_DateTime, Status, Breakfast, Lunch, Dinner,
+                             CabRequired, CabNotRequired, Destination, Approved_by, Empcode, Approver_Cmts, Validity,
+                             Entry_Flag, ConfirmExit)
+                            VALUES (@FormID, @VisitorName, @VisitorCompany, @Purpose_of_Visit, @Type_for_Visit, @Person_to_Meet, @Teamcode,
+                             @Visit_FromTime, @Visit_ToTime, @Visit_Time, @Expected_Duration, @Details_of_accessories, @Legal_ID_proof,
+                             @No_of_Visitors, @AccessLevel, @Restricted_Area, @Entered_DateTime, @Status, @Breakfast, @Lunch, @Dinner,
+                             @CabRequired, @CabNotRequired, @Destination, @Approved_by, @Empcode, @Approver_Cmts, @Validity,
+                             @Entry_Flag, @ConfirmExit)";
+
+                            using (SqlCommand cmdInsert = new SqlCommand(insertQuery, cn))
+                            {
+                                cmdInsert.Parameters.AddWithValue("@FormID", child.FormID);
+                                cmdInsert.Parameters.AddWithValue("@VisitorName", child.VisitorName);
+                                cmdInsert.Parameters.AddWithValue("@VisitorCompany", visitorCompany);
+                                cmdInsert.Parameters.AddWithValue("@Purpose_of_Visit", purposeOfVisit);
+                                cmdInsert.Parameters.AddWithValue("@Type_for_Visit", typeForVisit);
+                                cmdInsert.Parameters.AddWithValue("@Person_to_Meet", personToMeet);
+                                cmdInsert.Parameters.AddWithValue("@Teamcode", teamcode);
+                                cmdInsert.Parameters.AddWithValue("@Visit_FromTime", visitFromTime);
+                                cmdInsert.Parameters.AddWithValue("@Visit_ToTime", visitToTime);
+                                cmdInsert.Parameters.AddWithValue("@Visit_Time", visitTime);
+                                cmdInsert.Parameters.AddWithValue("@Expected_Duration", expectedDuration);
+                                cmdInsert.Parameters.AddWithValue("@Details_of_accessories", detailsOfAccessories);
+                                cmdInsert.Parameters.AddWithValue("@Legal_ID_proof", legalIdProof);
+                                cmdInsert.Parameters.AddWithValue("@No_of_Visitors", noOfVisitors);
+                                cmdInsert.Parameters.AddWithValue("@AccessLevel", accessLevel);
+                                cmdInsert.Parameters.AddWithValue("@Restricted_Area", restrictedArea);
+                                cmdInsert.Parameters.AddWithValue("@Entered_DateTime", enteredDateTime);
+                                cmdInsert.Parameters.AddWithValue("@Status", status);
+                                cmdInsert.Parameters.AddWithValue("@Breakfast", breakfast);
+                                cmdInsert.Parameters.AddWithValue("@Lunch", lunch);
+                                cmdInsert.Parameters.AddWithValue("@Dinner", dinner);
+                                cmdInsert.Parameters.AddWithValue("@CabRequired", cabRequired);
+                                cmdInsert.Parameters.AddWithValue("@CabNotRequired", cabNotRequired);
+                                cmdInsert.Parameters.AddWithValue("@Destination", destination);
+                                cmdInsert.Parameters.AddWithValue("@Approved_by", approvedBy);
+                                cmdInsert.Parameters.AddWithValue("@Empcode", empcode);
+                                cmdInsert.Parameters.AddWithValue("@Approver_Cmts", approverCmts);
+                                cmdInsert.Parameters.AddWithValue("@Validity", validity);
+                                cmdInsert.Parameters.AddWithValue("@Entry_Flag", entryFlag);
+                                cmdInsert.Parameters.AddWithValue("@ConfirmExit", confirmExit);
+
+                                cmdInsert.ExecuteNonQuery();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+
+
+    public void ShowMessage(string sMessage, string sTitle = "Alert", decimal dWidth = 500, decimal dHeight = 210)
+    {
+        string radalertscript = "function f(){var oAlert = radalert('" + sMessage + "', " + dWidth + ", " + dHeight + ",'" + sTitle + "'); setTimeout(function(){oAlert.center();},0);Sys.Application.remove_load(f);}Sys.Application.add_load(f);";
+        ScriptManager.RegisterStartupScript(this, this.GetType(), "radalert", radalertscript, true);
     }
 
     protected void acbSCD_TextChanged(object sender, EventArgs e)
@@ -472,14 +698,12 @@ public partial class VisitorPassApproval : System.Web.UI.Page
 
     private void BindFormDetails(string formId)
     {
-        // Get connection string from Web.config
-        //string connStr = ConfigurationManager.ConnectionStrings["YourConnectionString"].ConnectionString;
-
         using (SqlConnection conn = new SqlConnection(connectionString))
         {
-            string query = @"Select Entered_DateTime, Purpose_of_Visit, Person_to_Meet,
+            string query = @"SELECT Entered_DateTime, Purpose_of_Visit, Person_to_Meet,
                                 Breakfast, Lunch, Dinner,
-                                CabRequired, Destination
+                                CabRequired, Destination, No_of_Visitors,
+                                VisitorName, VisitorCompany, Visit_FromTime, Visit_ToTime
                          FROM TblVisitorPass_Request
                          WHERE FormID = @FormID";
 
@@ -491,7 +715,9 @@ public partial class VisitorPassApproval : System.Web.UI.Page
 
             if (reader.Read())
             {
-                // Bind TextBoxes
+                txtDestination.Text = reader["Destination"] is DBNull
+                    ? string.Empty
+                    : reader["Destination"].ToString();
 
                 txtRequestDate.Text = reader["Entered_DateTime"] is DBNull
                     ? string.Empty
@@ -505,6 +731,27 @@ public partial class VisitorPassApproval : System.Web.UI.Page
                     ? string.Empty
                     : reader["Person_to_Meet"].ToString();
 
+                numVisitors.Text = reader["No_of_Visitors"] is DBNull
+                    ? string.Empty
+                    : reader["No_of_Visitors"].ToString();
+
+                // New fields
+                txtFullName.Text = reader["VisitorName"] is DBNull
+                    ? string.Empty
+                    : reader["VisitorName"].ToString();
+
+                txtCompany.Text = reader["VisitorCompany"] is DBNull
+                    ? string.Empty
+                    : reader["VisitorCompany"].ToString();
+
+                visitdatefrom.Text = reader["Visit_FromTime"] is DBNull
+                    ? string.Empty
+                    : Convert.ToDateTime(reader["Visit_FromTime"]).ToString("dd-MM-yyyy");
+
+                visitdateto.Text = reader["Visit_ToTime"] is DBNull
+                    ? string.Empty
+                    : Convert.ToDateTime(reader["Visit_ToTime"]).ToString("dd-MM-yyyy");
+
                 // Bind CheckBoxes
                 chkBreakfast.Checked = reader["Breakfast"] is DBNull ? false : Convert.ToBoolean(reader["Breakfast"]);
                 chkLunch.Checked = reader["Lunch"] is DBNull ? false : Convert.ToBoolean(reader["Lunch"]);
@@ -512,17 +759,8 @@ public partial class VisitorPassApproval : System.Web.UI.Page
 
                 bool cabRequired = reader["CabRequired"] is DBNull ? false : Convert.ToBoolean(reader["CabRequired"]);
                 RadCheckBox1.Checked = cabRequired;
-                RadCheckBox2.Checked = !cabRequired;
-                RadTextBox6.Text = reader["Destination"] is DBNull
-                ? string.Empty
-                : reader["Destination"].ToString();
+
             }
-            reader.Close();
-
-
-            // Now lock the controls
-            SetVisitorControlsReadOnlyConsistent();
-
         }
     }
 
@@ -535,31 +773,26 @@ public partial class VisitorPassApproval : System.Web.UI.Page
         txtRequestedBy.ReadOnly = true;
         txtRequestedBy.Enabled = true;
 
-        RadTextBox6.ReadOnly = true;
-        RadTextBox6.Enabled = true;
+        txtDestination.ReadOnly = true;
+        txtDestination.Enabled = true;
 
+        // Time picker disabled
         tpRequestTime.Enabled = false;
 
-        chkBreakfast.Enabled = true;
-        chkBreakfast.CssClass += " readonly-checkbox";
+        // CheckBoxes: fully disabled
+        chkBreakfast.Enabled = false;
+        chkLunch.Enabled = false;
+        chkDinner.Enabled = false;
 
-        chkLunch.Enabled = true;
-        chkLunch.CssClass += " readonly-checkbox";
+        RadCheckBox1.Enabled = false;
+        RadCheckBox2.Enabled = false;
 
-        chkDinner.Enabled = true;
-        chkDinner.CssClass += " readonly-checkbox";
-
-        RadCheckBox1.Enabled = true;
-        RadCheckBox1.CssClass += " readonly-checkbox";
-
-        RadCheckBox2.Enabled = true;
-        RadCheckBox2.CssClass += " readonly-checkbox";
-
-        // Add CSS class for text fields too
+        // Optional: add CSS class for styling read-only fields
         txtRequestDate.CssClass += " readonly-field";
         txtRequestedBy.CssClass += " readonly-field";
-        RadTextBox6.CssClass += " readonly-field";
+        txtDestination.CssClass += " readonly-field";
     }
+
 
     protected void acbPONo_ShowAll_DataSourceSelect(object sender, AutoCompleteBoxDataSourceSelectEventArgs e)
     {
@@ -649,22 +882,34 @@ public partial class VisitorPassApproval : System.Web.UI.Page
             SqlCommand.Connection = SqlConnection;
             SqlDataReader dr = SqlCommand.ExecuteReader();
             if (dr.HasRows && dr.Read())
-
+                 
             {
 
                 RadAutoCompleteBox1.Entries.Clear();
-                RadAutoCompleteBox1.Entries.Add(new AutoCompleteBoxEntry(dr["FormID"].ToString()));
+                RadAutoCompleteBox1.Entries.Add(new AutoCompleteBoxEntry(
+                    dr["FormID"] is DBNull ? string.Empty : dr["FormID"].ToString()
+                ));
 
-                txtFullName.Text = dr["VisitorName"].ToString();
-                txtCompany.Text = dr["VisitorCompany"].ToString();
-                txtRequestedBy.Text = dr["Person_to_Meet"].ToString();
-                numVisitors.Text = dr["No_of_Visitors"].ToString();
-                RadTextBox6.Text = dr["Destination"].ToString();
-                tpRequestTime.Text = dr["Purpose_of_Visit"].ToString();
-                txtRequestDate.Text = dr["Entered_DateTime"].ToString();
-                visitdatefrom.Text = dr["Visit_FromTime"].ToString();
-                visitdateto.Text = dr["Visit_ToTime"].ToString();
+                txtFullName.Text = dr["VisitorName"] is DBNull ? string.Empty : dr["VisitorName"].ToString();
+                txtCompany.Text = dr["VisitorCompany"] is DBNull ? string.Empty : dr["VisitorCompany"].ToString();
+                txtRequestedBy.Text = dr["Person_to_Meet"] is DBNull ? string.Empty : dr["Person_to_Meet"].ToString();
+                numVisitors.Text = dr["No_of_Visitors"] is DBNull ? string.Empty : dr["No_of_Visitors"].ToString();
+                txtDestination.Text = dr["Destination"] is DBNull ? string.Empty : dr["Destination"].ToString();
+                tpRequestTime.Text = dr["Purpose_of_Visit"] is DBNull ? string.Empty : dr["Purpose_of_Visit"].ToString();
 
+                txtRequestDate.Text = dr["Entered_DateTime"] is DBNull
+                    ? string.Empty
+                    : Convert.ToDateTime(dr["Entered_DateTime"]).ToString("dd-MM-yyyy");
+
+                visitdatefrom.Text = dr["Visit_FromTime"] is DBNull
+                    ? string.Empty
+                    : Convert.ToDateTime(dr["Visit_FromTime"]).ToString("dd-MM-yyyy");
+
+                visitdateto.Text = dr["Visit_ToTime"] is DBNull
+                    ? string.Empty
+                    : Convert.ToDateTime(dr["Visit_ToTime"]).ToString("dd-MM-yyyy");
+
+                // CheckBoxes
                 chkBreakfast.Checked = SafeBool(dr["Breakfast"]);
                 chkLunch.Checked = SafeBool(dr["Lunch"]);
                 chkDinner.Checked = SafeBool(dr["Dinner"]);
@@ -677,6 +922,9 @@ public partial class VisitorPassApproval : System.Web.UI.Page
                     DisableFormControls();
                     RadGrid1.Enabled = false;
                 }
+
+
+
             }
 
             SqlConnection.Close();
@@ -732,16 +980,10 @@ public partial class VisitorPassApproval : System.Web.UI.Page
         txtCompany.Enabled = false;
         txtRequestedBy.Enabled = false;
         numVisitors.Enabled = false;
-
-        RadTextBox6.Enabled = false;
-
-
+        txtDestination.Enabled = false;
         tpRequestTime.Enabled = false; // HtmlSelect
-
-
         visitdatefrom.Enabled = false; // RadDatePicker
         visitdateto.Enabled = false;
-
         chkBreakfast.Enabled = false;
         chkLunch.Enabled = false;
         chkDinner.Enabled = false;
@@ -762,17 +1004,14 @@ public partial class VisitorPassApproval : System.Web.UI.Page
         tpRequestTime.Text = string.Empty;
 
         txtRequestedBy.Text = string.Empty;
-        RadTextBox6.Text = string.Empty;
-        RadTextBox6.Text = string.Empty;
+        txtDestination.Text = string.Empty;
+        txtDestination.Text = string.Empty;
         visitdateto.Text = string.Empty;
         visitdatefrom.Text = string.Empty;
         txtRequestDate.Text = string.Empty;
         // Labels
-
-
         // Numbers (Telerik RadNumericTextBox)
         numVisitors.Text = string.Empty;
-
         // Checkboxes (normalize bool? to false)
         chkBreakfast.Checked = false;
         chkLunch.Checked = false;
@@ -811,6 +1050,18 @@ public partial class VisitorPassApproval : System.Web.UI.Page
         string status = rbStatusList.SelectedValue;
         string Teamcode = (string)Session["Teamcode"];
         BindGrid(status, Teamcode);
+                        if (status == "N")
+                {
+                    txtStatus.Text = "Waiting for approval";
+                }
+                if (status == "A")
+                {
+                    txtStatus.Text = "Approved";
+                }
+                if (status == "D")
+                {
+                    txtStatus.Text = "Disapproved";
+                }
     }
 
     private void BindGrid(string status, string Teamcode)
@@ -943,5 +1194,7 @@ public partial class VisitorPassApproval : System.Web.UI.Page
     {
 
     }
+
+
 }
 

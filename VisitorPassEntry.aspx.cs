@@ -32,6 +32,9 @@ public partial class VisitorPassEntry : System.Web.UI.Page
     public string Visitorid;
     public DateTime IDDate = DateTime.Today;
     public string sRadGrid1_DataSource;
+    public string sRadGrid2_DataSource;
+    public string PID;
+    public double dLPID;
 
     protected void Page_Load(object sender, EventArgs e)
     {
@@ -42,7 +45,7 @@ public partial class VisitorPassEntry : System.Web.UI.Page
             Response.Redirect("~/Default.aspx");
             return;
         }
-
+        
         // *********** CODE FOR MIGRATION *************
         string strCode = Request.QueryString["Code"];
         if (strCode != null)
@@ -68,14 +71,18 @@ public partial class VisitorPassEntry : System.Web.UI.Page
         GlobalClassCS.DBConn = sessionConn;
         connectionString = GlobalClassCS.DBConn;
         SqlConnection.ConnectionString = GlobalClassCS.DBConn;
-
+        
         if (IsPostBack)
         {
+            
             lblDateTime.Text = DateTime.Now.ToString();
-            rwVisitorGrid.VisibleOnPageLoad = false;
+            //txtFormID.Text = PID;
+            //rwVisitorGrid.VisibleOnPageLoad = false;
+            //RadWindow2.VisibleOnPageLoad = false;
         }
         else
         {
+            
             visitdatefrom.SelectedDate = DateTime.Today;
             visitdateto.SelectedDate = DateTime.Today;
             rbStatusList.SelectedValue = "N";
@@ -83,8 +90,8 @@ public partial class VisitorPassEntry : System.Web.UI.Page
             txtPersonToMeet.Text = Session["EmpName"].ToString();
             txtValidity.Enabled = false;
             txtDestination.Enabled = false;
-            txtFormID.Text = Visitorid;
-           //rwVisitorGrid.VisibleOnPageLoad = false;
+           
+            rwVisitorGrid.VisibleOnPageLoad = false;
             numVisitors.Enabled = false;
             string query = "SELECT UnitNo FROM Unit_Master ORDER BY UnitNo DESC";
             SqlDataAdapter da = new SqlDataAdapter(query, SqlConnection);
@@ -92,7 +99,20 @@ public partial class VisitorPassEntry : System.Web.UI.Page
             da.Fill(dt);
             txtresarea.DataSource = dt;
             txtresarea.DataBind();
+            txtDepartment.Enabled = false;
+            txtPersonToMeet.Enabled = false;
+            txtValidity.Text = "1";
+            //RadWindow2.VisibleOnPageLoad = false;
         }
+
+
+        if (IsPostBack != true)
+        {
+            GETSPID();
+            Session["dLPID"] = dLPID;
+            txtFormID.Text = "PID" + PID;
+        }
+
 
         ApplySandalColor(this.Page);
         ApplyLavenderColor(this.Page);
@@ -130,7 +150,24 @@ public partial class VisitorPassEntry : System.Web.UI.Page
         }
     }
 
+    public double GETSPID()
+    {
 
+        //SqlConnection.Close();
+        SqlConnection.Open();
+        SqlCommand.CommandText = "SELECT @@SPID AS 'ID', SYSTEM_USER AS 'Login Name', USER AS 'User Name'";
+        SqlCommand.Connection = SqlConnection;
+        SqlDataReader DR = SqlCommand.ExecuteReader();
+        while (DR.Read())
+        {
+            PID = DR["ID"].ToString();
+        }
+
+        dLPID = Convert.ToDouble(PID);
+        SqlConnection.Close();
+        return dLPID;
+
+    }
     private void ApplySandalColor(System.Web.UI.Control parent)
     {
         foreach (System.Web.UI.Control ctrl in parent.Controls)
@@ -179,13 +216,205 @@ public partial class VisitorPassEntry : System.Web.UI.Page
 
     }
 
+    //protected void btnSubmit_Click(object sender, EventArgs e)
+    //{
+    //    rwVisitorGrid.VisibleOnPageLoad = false;
+    //    Visitorid = FuncVisitorID(IDDate);
+    //    // Collect values from form controls
+    //    string visitorName = txtFullName.Text.Trim();
+    //    string visitorCompany = txtCompany.Text.Trim();
+    //    string formId = Visitorid; // fixed value, or use txtFormID.Text if needed
+
+    //    string purpose = txtpurpose.Value.Trim();
+    //    string type = txttype.Value.Trim();
+    //    string personToMeet = txtPersonToMeet.Text.Trim();
+    //    string department = txtDepartment.Text.Trim();
+    //    DateTime visitFrom = visitdatefrom.SelectedDate.Value;
+    //    DateTime visitTo = visitdateto.SelectedDate.Value;
+    //    string accessLevel = RadTextBox3.Text.Trim();
+    //    string restrictedArea = txtresarea.Text.Trim();
+    //    string duration = txtDuration.Text.Trim();
+    //    string accessories = txtaccessories.Text.Trim();
+    //    string legalIdProof = txtproof.Text.Trim();
+    //    string enterDateTime = lblDateTime.Text.Trim();
+    //    string Destination = txtDestination.Text.Trim();
+    //    int visitorsCount = Convert.ToInt32(numVisitors.Value ?? 0);
+
+    //    // Null-coalescing (defaults to false when null)
+    //    bool breakfast = chkBreakfast.Checked ?? false;
+    //    bool lunch = chkLunch.Checked ?? false;
+    //    bool dinner = chkDinner.Checked ?? false;
+
+    //    bool cabRequired;
+    //    bool cabNotRequired;
+    //    if (RadioOpen.SelectedValue.ToString() == "1")
+    //    {
+    //        cabRequired = true;
+    //        cabNotRequired = false;
+    //    }
+    //    else
+    //    {
+    //        cabNotRequired = true;
+    //        cabRequired = false;
+    //    }
+    //    if (string.IsNullOrEmpty(visitorName))
+    //    {
+
+    //        RadWindowManager1.RadAlert("Visitor Name Should not be empty.", 500, 150, "Validation Error", null);
+    //        return;
+    //    }
+
+    //    if (string.IsNullOrEmpty(visitorCompany))
+    //    {
+    //        RadWindowManager1.RadAlert("Visitor Company Should not be empty.", 500, 150, "Validation Error", null);
+    //        return;
+    //    }
+
+    //    if (string.IsNullOrEmpty(purpose))
+    //    {
+    //        RadWindowManager1.RadAlert("Purpose of Visit Should not be empty.", 500, 150, "Validation Error", null);
+    //        return;
+    //    }
+
+    //    if (string.IsNullOrEmpty(type))
+    //    {
+    //        RadWindowManager1.RadAlert("Type of Visit Should not be empty.", 500, 150, "Validation Error", null);
+    //        return;
+    //    }
+
+    //    if (string.IsNullOrEmpty(personToMeet))
+    //    {
+    //        RadWindowManager1.RadAlert("Person to Meet Should not be empty.", 500, 150, "Validation Error", null);
+    //        return;
+    //    }
+
+    //    if (string.IsNullOrEmpty(accessLevel))
+    //    {
+    //        RadWindowManager1.RadAlert("Access Level Should not be empty.", 500, 150, "Validation Error", null);
+    //        return;
+    //    }
+
+    //    if (string.IsNullOrEmpty(duration))
+    //    {
+    //        RadWindowManager1.RadAlert("Expected Duration Should not be empty.", 500, 150, "Validation Error", null);
+    //        return;
+    //    }
+
+    //    if (string.IsNullOrEmpty(accessories))
+    //    {
+    //        RadWindowManager1.RadAlert("Details of accessories Should not be empty.", 500, 150, "Validation Error", null);
+    //        return;
+    //    }
+
+    //    if (string.IsNullOrEmpty(legalIdProof))
+    //    {
+    //        RadWindowManager1.RadAlert("legalIdProof Should not be empty.", 500, 150, "Validation Error", null);
+    //        return;
+    //    }
+
+    //    if (visitdatefrom.SelectedDate != null && visitdateto.SelectedDate != null)
+    //    {
+    //        DateTime fromDate = visitdatefrom.SelectedDate.Value;
+    //        DateTime toDate = visitdateto.SelectedDate.Value;
+
+    //        if (toDate < fromDate)
+    //        {
+    //            RadWindowManager1.RadAlert("Visit To Date cannot be earlier than Visit From Date.",
+    //                                       500, 150, "Validation Error", null);
+    //            visitdateto.Clear(); // reset invalid date
+    //            return;
+    //        }
+
+    //        // Calculate difference in days (inclusive)
+    //        int days = (toDate - fromDate).Days + 1;
+    //        txtValidity.Text = days.ToString();
+    //    }
+
+
+    //    using (SqlConnection conn = new SqlConnection(connectionString))
+    //    {
+
+    //        string query = @"INSERT INTO TblVisitorPass_Request
+    //                 (VisitorName, VisitorCompany, formid,
+    //                  Purpose_of_Visit, Type_for_Visit, Person_to_Meet, Teamcode,
+    //                  Visit_FromTime, Visit_ToTime, Restricted_Area,
+    //                  Expected_Duration, Details_of_accessories, Legal_ID_proof, No_of_Visitors, Entered_DateTime, Status, Breakfast, Lunch, Dinner, CabRequired, CabNotRequired,AccessLevel,Destination,Validity)
+    //                 VALUES
+    //                 (@VisitorName, @VisitorCompany, @FormId,
+    //                  @Purpose, @Type, @PersonToMeet, @Department,
+    //                  @VisitFrom, @VisitTo, @RestrictedArea,
+    //                  @Duration, @Accessories, @LegalIdProof, @NumVisitors, @enterDateTime, @status, @breakfast, @lunch, @dinner, @cabRequired, @cabNotRequired,@accessLevel,@Destination,@Validity)";
+
+    //        using (SqlCommand cmd = new SqlCommand(query, conn))
+    //        {
+    //            // Add parameters
+    //            cmd.Parameters.AddWithValue("@VisitorName", visitorName);
+    //            cmd.Parameters.AddWithValue("@VisitorCompany", visitorCompany);
+    //            cmd.Parameters.AddWithValue("@FormId", Visitorid);
+    //            cmd.Parameters.AddWithValue("@Purpose", purpose);
+    //            cmd.Parameters.AddWithValue("@Type", type);
+    //            cmd.Parameters.AddWithValue("@PersonToMeet", personToMeet);
+    //            cmd.Parameters.AddWithValue("@Department", department);
+    //            cmd.Parameters.AddWithValue("@VisitFrom", visitFrom);
+    //            cmd.Parameters.AddWithValue("@VisitTo", visitTo);
+    //            cmd.Parameters.AddWithValue("@AccessLevel", accessLevel);
+    //            cmd.Parameters.AddWithValue("@RestrictedArea", restrictedArea);
+    //            cmd.Parameters.AddWithValue("@Duration", duration);
+    //            cmd.Parameters.AddWithValue("@Accessories", accessories);
+    //            cmd.Parameters.AddWithValue("@LegalIdProof", legalIdProof);
+    //            cmd.Parameters.AddWithValue("@NumVisitors", BindVisitorsCount());
+    //            cmd.Parameters.AddWithValue("@enterDateTime", lblDateTime.Text);
+    //            cmd.Parameters.AddWithValue("@status", "N");
+    //            cmd.Parameters.AddWithValue("@Breakfast", breakfast);
+    //            cmd.Parameters.AddWithValue("@Lunch", lunch);
+    //            cmd.Parameters.AddWithValue("@Dinner", dinner);
+    //            cmd.Parameters.AddWithValue("@cabRequired", cabRequired);
+    //            cmd.Parameters.AddWithValue("@cabNotRequired", cabNotRequired);
+    //            cmd.Parameters.AddWithValue("@Destination", Destination);
+    //            cmd.Parameters.AddWithValue("@Validity", txtValidity.Text);
+
+    //            conn.Open();
+    //            cmd.ExecuteNonQuery();
+
+    //            ShowMessage("Data Saved Successfully");
+    //            txtFormID.Text = "";
+
+    //            // Get last Msg_No
+    //            DataTable dt = GetTable("SELECT TOP 1 Msg_No FROM EMails_Undelivered ORDER BY Msg_Slno DESC");
+
+    //            int inc = 1; // Default if no rows
+    //            if (dt != null && dt.Rows.Count > 0)
+    //            {
+    //                int lastMsgNo;
+    //                if (int.TryParse(Convert.ToString(dt.Rows[0]["Msg_No"]), out lastMsgNo))
+    //                {
+    //                    inc = lastMsgNo + 1;
+    //                }
+    //            }
+
+    //            // Get recipient email
+    //            DataTable dtTable = GetTable("SELECT EMailID FROM VisitorPass_Approval_Config WHERE Teamcode = 'Soft'");
+    //            if (dtTable != null && dtTable.Rows.Count > 0)
+    //            {
+    //                string recipientEmail = Convert.ToString(dtTable.Rows[0]["EMailID"]);
+    //                InsertApprovalEmail(visitorName, visitorCompany, personToMeet, recipientEmail, Visitorid, inc, visitFrom);
+    //            }
+
+    //            Funclear();
+    //            RadGrid1.Rebind();
+    //        }
+    //    }
+    //}
+
     protected void btnSubmit_Click(object sender, EventArgs e)
     {
+        rwVisitorGrid.VisibleOnPageLoad = false;
         Visitorid = FuncVisitorID(IDDate);
+
         // Collect values from form controls
         string visitorName = txtFullName.Text.Trim();
         string visitorCompany = txtCompany.Text.Trim();
-        string formId = Visitorid; // fixed value, or use txtFormID.Text if needed
+        string formId = Visitorid; // or use txtFormID.Text if editing existing
 
         string purpose = txtpurpose.Value.Trim();
         string type = txttype.Value.Trim();
@@ -201,7 +430,6 @@ public partial class VisitorPassEntry : System.Web.UI.Page
         string enterDateTime = lblDateTime.Text.Trim();
         string Destination = txtDestination.Text.Trim();
         int visitorsCount = Convert.ToInt32(numVisitors.Value ?? 0);
-
         // Null-coalescing (defaults to false when null)
         bool breakfast = chkBreakfast.Checked ?? false;
         bool lunch = chkLunch.Checked ?? false;
@@ -219,62 +447,52 @@ public partial class VisitorPassEntry : System.Web.UI.Page
             cabNotRequired = true;
             cabRequired = false;
         }
+   
 
-     
-
-
-        if (string.IsNullOrEmpty(visitorName))
+            // Validations
+            if (string.IsNullOrEmpty(visitorName))
         {
-
             RadWindowManager1.RadAlert("Visitor Name Should not be empty.", 500, 150, "Validation Error", null);
             return;
         }
-
         if (string.IsNullOrEmpty(visitorCompany))
         {
             RadWindowManager1.RadAlert("Visitor Company Should not be empty.", 500, 150, "Validation Error", null);
             return;
         }
-
         if (string.IsNullOrEmpty(purpose))
         {
             RadWindowManager1.RadAlert("Purpose of Visit Should not be empty.", 500, 150, "Validation Error", null);
             return;
         }
-
         if (string.IsNullOrEmpty(type))
         {
             RadWindowManager1.RadAlert("Type of Visit Should not be empty.", 500, 150, "Validation Error", null);
             return;
         }
-
         if (string.IsNullOrEmpty(personToMeet))
         {
             RadWindowManager1.RadAlert("Person to Meet Should not be empty.", 500, 150, "Validation Error", null);
             return;
         }
-
         if (string.IsNullOrEmpty(accessLevel))
         {
             RadWindowManager1.RadAlert("Access Level Should not be empty.", 500, 150, "Validation Error", null);
             return;
         }
-
         if (string.IsNullOrEmpty(duration))
         {
             RadWindowManager1.RadAlert("Expected Duration Should not be empty.", 500, 150, "Validation Error", null);
             return;
         }
-
         if (string.IsNullOrEmpty(accessories))
         {
             RadWindowManager1.RadAlert("Details of accessories Should not be empty.", 500, 150, "Validation Error", null);
             return;
         }
-
         if (string.IsNullOrEmpty(legalIdProof))
         {
-            RadWindowManager1.RadAlert("legalIdProof Should not be empty.", 500, 150, "Validation Error", null);
+            RadWindowManager1.RadAlert("Legal ID Proof Should not be empty.", 500, 150, "Validation Error", null);
             return;
         }
 
@@ -285,90 +503,179 @@ public partial class VisitorPassEntry : System.Web.UI.Page
 
             if (toDate < fromDate)
             {
-                RadWindowManager1.RadAlert("Visit To Date cannot be earlier than Visit From Date.",
-                                           500, 150, "Validation Error", null);
-                visitdateto.Clear(); // reset invalid date
+                RadWindowManager1.RadAlert("Visit To Date cannot be earlier than Visit From Date.", 500, 150, "Validation Error", null);
+                visitdateto.Clear();
                 return;
             }
 
-            // Calculate difference in days (inclusive)
             int days = (toDate - fromDate).Days + 1;
             txtValidity.Text = days.ToString();
         }
 
-
         using (SqlConnection conn = new SqlConnection(connectionString))
         {
+            conn.Open();
 
-            string query = @"INSERT INTO TblVisitorPass_Request
-                     (VisitorName, VisitorCompany, formid,
-                      Purpose_of_Visit, Type_for_Visit, Person_to_Meet, Teamcode,
-                      Visit_FromTime, Visit_ToTime, Restricted_Area,
-                      Expected_Duration, Details_of_accessories, Legal_ID_proof, No_of_Visitors, Entered_DateTime, Status, Breakfast, Lunch, Dinner, CabRequired, CabNotRequired,AccessLevel,Destination,Validity)
-                     VALUES
-                     (@VisitorName, @VisitorCompany, @FormId,
-                      @Purpose, @Type, @PersonToMeet, @Department,
-                      @VisitFrom, @VisitTo, @RestrictedArea,
-                      @Duration, @Accessories, @LegalIdProof, @NumVisitors, @enterDateTime, @status, @breakfast, @lunch, @dinner, @cabRequired, @cabNotRequired,@accessLevel,@Destination,@Validity)";
-
-            using (SqlCommand cmd = new SqlCommand(query, conn))
+            // Check if record exists
+            string checkQuery = "SELECT COUNT(*) FROM TblVisitorPass_Request WHERE formid = @FormId";
+            using (SqlCommand checkCmd = new SqlCommand(checkQuery, conn))
             {
-                // Add parameters
-                cmd.Parameters.AddWithValue("@VisitorName", visitorName);
-                cmd.Parameters.AddWithValue("@VisitorCompany", visitorCompany);
-                cmd.Parameters.AddWithValue("@FormId", Visitorid);
-                cmd.Parameters.AddWithValue("@Purpose", purpose);
-                cmd.Parameters.AddWithValue("@Type", type);
-                cmd.Parameters.AddWithValue("@PersonToMeet", personToMeet);
-                cmd.Parameters.AddWithValue("@Department", department);
-                cmd.Parameters.AddWithValue("@VisitFrom", visitFrom);
-                cmd.Parameters.AddWithValue("@VisitTo", visitTo);
-                cmd.Parameters.AddWithValue("@AccessLevel", accessLevel);
-                cmd.Parameters.AddWithValue("@RestrictedArea", restrictedArea);
-                cmd.Parameters.AddWithValue("@Duration", duration);
-                cmd.Parameters.AddWithValue("@Accessories", accessories);
-                cmd.Parameters.AddWithValue("@LegalIdProof", legalIdProof);
-                cmd.Parameters.AddWithValue("@NumVisitors", BindVisitorsCount());
-                cmd.Parameters.AddWithValue("@enterDateTime", lblDateTime.Text);
-                cmd.Parameters.AddWithValue("@status", "N");
-                cmd.Parameters.AddWithValue("@Breakfast", breakfast);
-                cmd.Parameters.AddWithValue("@Lunch", lunch);
-                cmd.Parameters.AddWithValue("@Dinner", dinner);
-                cmd.Parameters.AddWithValue("@cabRequired", cabRequired);
-                cmd.Parameters.AddWithValue("@cabNotRequired", cabNotRequired);
-                cmd.Parameters.AddWithValue("@Destination", Destination);
-                cmd.Parameters.AddWithValue("@Validity", txtValidity.Text);
-                
-                conn.Open();
-                cmd.ExecuteNonQuery();
+                checkCmd.Parameters.AddWithValue("@FormId", txtFormID.Text);
+                int count = (int)checkCmd.ExecuteScalar();
 
-                ShowMessage("Data Saved Successfully");
-                txtFormID.Text = "";
-
-                // Get last Msg_No
-                DataTable dt = GetTable("SELECT TOP 1 Msg_No FROM EMails_Undelivered ORDER BY Msg_Slno DESC");
-
-                int inc = 1; // Default if no rows
-                if (dt != null && dt.Rows.Count > 0)
+                string query;
+                bool isUpdate = count > 0;
+                if (isUpdate)
                 {
-                    int lastMsgNo;
-                    if (int.TryParse(Convert.ToString(dt.Rows[0]["Msg_No"]), out lastMsgNo))
+                    string formmId = txtFormID.Text;
+                    // UPDATE existing record
+                    query = @"UPDATE TblVisitorPass_Request
+                          SET VisitorName = @VisitorName,
+                              VisitorCompany = @VisitorCompany,
+                              Purpose_of_Visit = @Purpose,
+                              Type_for_Visit = @Type,
+                              Person_to_Meet = @PersonToMeet,
+                              Teamcode = @Department,
+                              Visit_FromTime = @VisitFrom,
+                              Visit_ToTime = @VisitTo,
+                              Restricted_Area = @RestrictedArea,
+                              Expected_Duration = @Duration,
+                              Details_of_accessories = @Accessories,
+                              Legal_ID_proof = @LegalIdProof,
+                              No_of_Visitors = @NumVisitors,
+                              Entered_DateTime = @enterDateTime,
+                              Status = @status,
+                              Breakfast = @Breakfast,
+                              Lunch = @Lunch,
+                              Dinner = @Dinner,
+                              CabRequired = @cabRequired,
+                              CabNotRequired = @cabNotRequired,
+                              AccessLevel = @AccessLevel,
+                              Destination = @Destination,
+                              Validity = @Validity
+                          WHERE formid = @formmId";
+                }
+                else
+                {
+                    // INSERT new record
+                    query = @"INSERT INTO TblVisitorPass_Request
+                         (VisitorName, VisitorCompany, formid,
+                          Purpose_of_Visit, Type_for_Visit, Person_to_Meet, Teamcode,
+                          Visit_FromTime, Visit_ToTime, Restricted_Area,
+                          Expected_Duration, Details_of_accessories, Legal_ID_proof, No_of_Visitors, Entered_DateTime, Status, Breakfast, Lunch, Dinner, CabRequired, CabNotRequired, AccessLevel, Destination, Validity)
+                         VALUES
+                         (@VisitorName, @VisitorCompany, @FormId,
+                          @Purpose, @Type, @PersonToMeet, @Department,
+                          @VisitFrom, @VisitTo, @RestrictedArea,
+                          @Duration, @Accessories, @LegalIdProof, @NumVisitors, @enterDateTime, @status, @Breakfast, @Lunch, @Dinner, @cabRequired, @cabNotRequired, @AccessLevel, @Destination, @Validity)";
+                }
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    // Add parameters
+                    cmd.Parameters.AddWithValue("@VisitorName", visitorName);
+                    cmd.Parameters.AddWithValue("@VisitorCompany", visitorCompany);
+                    cmd.Parameters.AddWithValue("@FormId", formId);
+                    cmd.Parameters.AddWithValue("@Purpose", purpose);
+                    cmd.Parameters.AddWithValue("@Type", type);
+                    cmd.Parameters.AddWithValue("@PersonToMeet", personToMeet);
+                    cmd.Parameters.AddWithValue("@Department", department);
+                    cmd.Parameters.AddWithValue("@VisitFrom", visitFrom);
+                    cmd.Parameters.AddWithValue("@VisitTo", visitTo);
+                    cmd.Parameters.AddWithValue("@AccessLevel", accessLevel);
+                    cmd.Parameters.AddWithValue("@RestrictedArea", restrictedArea);
+                    cmd.Parameters.AddWithValue("@Duration", duration);
+                    cmd.Parameters.AddWithValue("@Accessories", accessories);
+                    cmd.Parameters.AddWithValue("@LegalIdProof", legalIdProof);
+                    cmd.Parameters.AddWithValue("@NumVisitors", BindVisitorsCount());
+                    cmd.Parameters.AddWithValue("@enterDateTime", lblDateTime.Text);
+                    cmd.Parameters.AddWithValue("@status", "N");
+                    cmd.Parameters.AddWithValue("@Breakfast", breakfast);
+                    cmd.Parameters.AddWithValue("@Lunch", lunch);
+                    cmd.Parameters.AddWithValue("@Dinner", dinner);
+                    cmd.Parameters.AddWithValue("@cabRequired", cabRequired);
+                    cmd.Parameters.AddWithValue("@cabNotRequired", cabNotRequired);
+                    cmd.Parameters.AddWithValue("@Destination", Destination);
+                    cmd.Parameters.AddWithValue("@Validity", txtValidity.Text);
+
+                    if (isUpdate)
                     {
-                        inc = lastMsgNo + 1;
+                        // For UPDATE, use @formmId (textbox value)
+                        cmd.Parameters.AddWithValue("@formmId", txtFormID.Text);
                     }
-                }
+                    else
+                    {
+                        // For INSERT, use textbox value only
+                        cmd.Parameters.AddWithValue("@formmId", txtFormID.Text);
 
-                // Get recipient email
-                DataTable dtTable = GetTable("SELECT EMailID FROM VisitorPass_Approval_Config WHERE Teamcode = 'Soft'");
-                if (dtTable != null && dtTable.Rows.Count > 0)
-                {
-                    string recipientEmail = Convert.ToString(dtTable.Rows[0]["EMailID"]);
-                    InsertApprovalEmail(visitorName, visitorCompany, personToMeet, recipientEmail, Visitorid, inc, visitFrom);
-                }
+                        // DO NOT re-add @FormId here, it’s already added above
+                        // cmd.Parameters.AddWithValue("@FormId", formId);
 
-                Funclear();
-                RadGrid1.Rebind();
+                        // Query existing records using textbox value
+                        string checkQueryInsert = "SELECT FormID FROM tbl_VisitorPass_member_temp WHERE FormID LIKE '%' + @formmId + '%'";
+                        List<string> oldFormIds = new List<string>();
+
+                        using (SqlCommand checkCmdInsert = new SqlCommand(checkQueryInsert, conn))
+                        {
+                            checkCmdInsert.Parameters.AddWithValue("@formmId", txtFormID.Text);
+
+                            using (SqlDataReader reader = checkCmdInsert.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    oldFormIds.Add(reader["FormID"].ToString());
+                                }
+                            }
+                        }
+
+                        // Update each record after closing the reader
+                        foreach (string oldFormId in oldFormIds)
+                        {
+                            string newFormId = oldFormId.Replace(txtFormID.Text, formId);
+
+                            using (SqlCommand updateCmd = new SqlCommand(
+                                "UPDATE tbl_VisitorPass_member_temp SET FormID = @newFormId WHERE FormID = @oldFormId", conn))
+                            {
+                                updateCmd.Parameters.AddWithValue("@newFormId", newFormId);
+                                updateCmd.Parameters.AddWithValue("@oldFormId", oldFormId);
+
+                                updateCmd.ExecuteNonQuery();
+                            }
+                        }
+                    }
+
+
+                    cmd.ExecuteNonQuery();
+                }
             }
+
+            ShowMessage("Data Saved Successfully");
+
+            GETSPID();
+            Session["dLPID"] = dLPID;
+            txtFormID.Text = "PID" + PID;
+
+            // Email logic
+            DataTable dt = GetTable("SELECT TOP 1 Msg_No FROM EMails_Undelivered ORDER BY Msg_Slno DESC");
+            int inc = 1;
+            if (dt != null && dt.Rows.Count > 0)
+            {
+                int lastMsgNo;
+                if (int.TryParse(Convert.ToString(dt.Rows[0]["Msg_No"]), out lastMsgNo))
+                {
+                    inc = lastMsgNo + 1;
+                }
+            }
+
+            DataTable dtTable = GetTable("SELECT EMailID FROM VisitorPass_Approval_Config WHERE Teamcode = 'Soft'");
+            if (dtTable != null && dtTable.Rows.Count > 0)
+            {
+                string recipientEmail = Convert.ToString(dtTable.Rows[0]["EMailID"]);
+                InsertApprovalEmail(visitorName, visitorCompany, personToMeet, recipientEmail, formId, inc, visitFrom);
+            }
+
+            Funclear();
+            RadGrid1.Rebind();
         }
     }
 
@@ -376,7 +683,7 @@ public partial class VisitorPassEntry : System.Web.UI.Page
     private void InsertApprovalEmail(string visitorName, string visitorCompany, string personToMeet, string recipientEmail, string Visitorid, int inc, DateTime visitFrom)
     {
         string msgSubject = "Approval Required: Visitor Pass Request";
-
+        string formattedDate = visitFrom.ToString("dd-MMM-yyyy");
         string msgText = "<HTML><BODY>"
                        + "Dear Approver,<br/><br/>"
                        + "A visitor pass request requires your approval.<br/><br/>"
@@ -384,14 +691,14 @@ public partial class VisitorPassEntry : System.Web.UI.Page
                        + "<b>Visitor Name:</b> " + visitorName + "<br/>"
                        + "<b>Visitor Company:</b> " + visitorCompany + "<br/>"
                        + "<b>Person To Meet:</b> " + personToMeet + "<br/>"
-                       + "<b>Visit Date:</b> " + visitFrom + "<br/>"
+                       + "<b>Visit Date:</b> " + formattedDate + "<br/>"
                        + "Please review and approve at your earliest convenience.<br/><br/>"
                        + "Thank you.<br/>"
                        + "</BODY></HTML>";
 
         using (SqlConnection conn = new SqlConnection(connectionString))
         {
-            conn.Open(); // ✅ Open the connection
+            conn.Open();
 
             using (SqlCommand cmd = new SqlCommand(@"INSERT INTO EMails_Undelivered
             (Msg_No, Msg_FromName, Msg_Recipient, Msg_Subject, Msg_Text, Msg_RecDateTime, Msg_Status, Msg_Module, Msg_FormName, Msg_FuncName)
@@ -609,6 +916,7 @@ public partial class VisitorPassEntry : System.Web.UI.Page
 
     protected void btnTerminate_Click(object sender, EventArgs e)
     {
+        rwVisitorGrid.VisibleOnPageLoad = false;
         using (SqlConnection conn = new SqlConnection(connectionString))
         {
 
@@ -701,7 +1009,7 @@ public partial class VisitorPassEntry : System.Web.UI.Page
                 SqlDataAdapter dataAdapter = new SqlDataAdapter(sql, con);
                 dataAdapter.Fill(ds);
             }
-            catch (Exception ex)
+            catch (Exception ex) 
             {
                 //Logger.get_error_log(ex, "", "", sql);
             }
@@ -783,6 +1091,8 @@ public partial class VisitorPassEntry : System.Web.UI.Page
 
         if (e.CommandName == "OpenForm")
         {
+            //RadWindow2.VisibleOnPageLoad = true;
+            //btnSubmit.Enabled = false;
             SqlConnection.Open();
             SqlCommand.CommandText = "SELECT FormID, VisitorName, VisitorCompany, Person_to_Meet, AccessLevel,Teamcode, Expected_Duration, Details_of_accessories, Legal_ID_proof, Restricted_Area, No_of_Visitors, Destination, AccessLevel, Purpose_of_Visit, Type_for_Visit,Status, Visit_FromTime,Visit_ToTime, Entered_DateTime, Breakfast, Lunch, Dinner, CabRequired, CabNotRequired,Validity FROM TblVisitorPass_Request where formid = '" + ViewState["FormID"] + "' and Visit_ToTime >= '" + DateTime.Now.ToString("yyyy-MM-dd") + "'";
             SqlCommand.Connection = SqlConnection;
@@ -905,6 +1215,7 @@ public partial class VisitorPassEntry : System.Web.UI.Page
     }
     protected void RadioOpen_SelectedIndexChanged(object sender, EventArgs e)
     {
+        rwVisitorGrid.VisibleOnPageLoad = false;
         if (RadioOpen.SelectedValue == "1") 
         {
             txtDestination.Enabled = true; 
@@ -914,6 +1225,14 @@ public partial class VisitorPassEntry : System.Web.UI.Page
             txtDestination.Enabled = false; 
         }
     }
+
+    protected void MealCheckBox_CheckedChanged(object sender, EventArgs e)
+    {
+        rwVisitorGrid.VisibleOnPageLoad = false;
+    }
+
+
+
     protected void visitdateto_SelectedDateChanged(object sender, Telerik.Web.UI.Calendar.SelectedDateChangedEventArgs e)
     {
         DateTime fromDate = visitdatefrom.SelectedDate.Value;
@@ -945,6 +1264,7 @@ public partial class VisitorPassEntry : System.Web.UI.Page
         int days = (toDate - fromDate).Days + 1;
         txtValidity.Text = days.ToString();
     }
+
 
 }
 

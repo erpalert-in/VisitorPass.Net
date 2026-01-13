@@ -347,9 +347,16 @@
                         <label for="type">Teamcode *</label>
                         <telerik:RadTextBox ID="txtDepartment" runat="server" Width="100%" />
                         <label for="RadTextBox3">Meals Option</label>
-                        <telerik:RadCheckBox ID="chkBreakfast" runat="server" Text="Breakfast" />
-                        <telerik:RadCheckBox ID="chkLunch" runat="server" Text="Lunch" />
-                        <telerik:RadCheckBox ID="chkDinner" runat="server" Text="Dinner" />
+
+                        <telerik:RadCheckBox ID="chkBreakfast" runat="server" Text="Breakfast"
+                            AutoPostBack="true" OnCheckedChanged="MealCheckBox_CheckedChanged" />
+
+                        <telerik:RadCheckBox ID="chkLunch" runat="server" Text="Lunch"
+                            AutoPostBack="true" OnCheckedChanged="MealCheckBox_CheckedChanged" />
+
+                        <telerik:RadCheckBox ID="chkDinner" runat="server" Text="Dinner"
+                            AutoPostBack="true" OnCheckedChanged="MealCheckBox_CheckedChanged" />
+
 
                         <label for="RadTextBox4">Cab Arrangements</label>
 
