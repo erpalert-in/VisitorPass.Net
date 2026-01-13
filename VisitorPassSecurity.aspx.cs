@@ -59,24 +59,24 @@ public partial class VisitorPassSecurity : System.Web.UI.Page
         }
     }
 
-private DataTable GetVisitorData()
-{
-    DataTable dt = new DataTable();
-    dt.Columns.Add("FormID");
-    dt.Columns.Add("VisitorName");
-    dt.Columns.Add("Company");
-    dt.Columns.Add("PersonToVisit");
-    dt.Columns.Add("VisitDate", typeof(DateTime));
-    dt.Columns.Add("Validity");
-    dt.Columns.Add("ConfirmLogged", typeof(bool));
-    dt.Columns.Add("ConfirmExit", typeof(bool));
+    private DataTable GetVisitorData()
+    {
+        DataTable dt = new DataTable();
+        dt.Columns.Add("FormID");
+        dt.Columns.Add("VisitorName");
+        dt.Columns.Add("Company");
+        dt.Columns.Add("PersonToVisit");
+        dt.Columns.Add("VisitDate", typeof(DateTime));
+        dt.Columns.Add("Validity");
+        dt.Columns.Add("ConfirmLogged", typeof(bool));
+        dt.Columns.Add("ConfirmExit", typeof(bool));
 
-    // Sample row
-    dt.Rows.Add("VP-2025-00123", "John Doe", "ABC Corp", "Mr. Smith", DateTime.Today, "2 hours", true, true);
+        // Sample row
+        dt.Rows.Add("VP-2025-00123", "John Doe", "ABC Corp", "Mr. Smith", DateTime.Today, "2 hours", true, true);
 
-    return dt;
-}
-protected void btnCallHost_Click(object sender, EventArgs e)
+        return dt;
+    }
+    protected void btnCallHost_Click(object sender, EventArgs e)
     {
         // Trigger call logic or log the action
     }
@@ -86,20 +86,45 @@ protected void btnCallHost_Click(object sender, EventArgs e)
     {
         if (e.CommandName == "CapturePhoto")
         {
-            
+            // your logic
         }
         else if (e.CommandName == "UploadPhoto")
         {
-            
+            // your logic
         }
         else if (e.CommandName == "PrintBadge")
         {
-            
+            // your logic
         }
-        if (e.CommandName == "Capture")
+        else if (e.CommandName == "Capture")
         {
-         
             ScriptManager.RegisterStartupScript(this, this.GetType(), "openCamera", "openCamera();", true);
+        }
+        else if (e.CommandName == "OpenForm")
+        {
+            GridDataItem item = e.Item as GridDataItem;
+            if (item != null)
+            {
+                string formId = e.CommandArgument.ToString();
+                string visitorName = item["VisitorName"].Text.Replace("&nbsp;", "").Trim();
+                string visitorCompany = item["VisitorCompany"].Text.Replace("&nbsp;", "").Trim();
+                string purpose = item["Purpose_of_Visit"].Text.Replace("&nbsp;", "").Trim();
+
+                visitorIdText.InnerText = formId;
+                visitorNameSpan.InnerText = visitorName;
+                visitorCompanySpan.InnerText = visitorCompany;
+                visitorPurpose.InnerText = purpose;
+
+                // Generate barcode with C# 5 compatible string.Format
+                ScriptManager.RegisterStartupScript(
+                    this,
+                    this.GetType(),
+                    "generateBarcode",
+                    string.Format("generateBarcode('{0}');", formId),
+                    true
+                );
+
+            }
         }
     }
 
@@ -134,7 +159,7 @@ protected void btnCallHost_Click(object sender, EventArgs e)
 
     protected void rgVisitorLog_ItemDataBound(object sender, GridItemEventArgs e)
     {
-        if(e.Item is GridDataItem)
+        if (e.Item is GridDataItem)
         {
             GridDataItem dataItem = (GridDataItem)e.Item;
             DataRowView row = (DataRowView)e.Item.DataItem;
@@ -180,11 +205,9 @@ protected void btnCallHost_Click(object sender, EventArgs e)
 
     }
 
-
-
     protected void ConfirmExit_CheckedChanged(object sender, EventArgs e)
     {
-        
+
     }
 
 }
