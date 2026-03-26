@@ -700,12 +700,12 @@ public partial class VisitorPassApproval : System.Web.UI.Page
     {
         using (SqlConnection conn = new SqlConnection(connectionString))
         {
-            string query = @"SELECT Entered_DateTime, Purpose_of_Visit, Person_to_Meet,
-                                Breakfast, Lunch, Dinner,
-                                CabRequired, Destination, No_of_Visitors,
-                                VisitorName, VisitorCompany, Visit_FromTime, Visit_ToTime
-                         FROM TblVisitorPass_Request
-                         WHERE FormID = @FormID";
+                string query = @"SELECT Entered_DateTime, Purpose_of_Visit, Person_to_Meet,
+                                    Breakfast, Lunch, Dinner,
+                                    CabRequired, Destination, No_of_Visitors,
+                                    VisitorName, MobileNumber, VisitorCompany, Visit_FromTime, Visit_ToTime
+                             FROM TblVisitorPass_Request
+                             WHERE FormID = @FormID";
 
             SqlCommand cmd = new SqlCommand(query, conn);
             cmd.Parameters.AddWithValue("@FormID", RadAutoCompleteBox1.Text);
@@ -739,6 +739,10 @@ public partial class VisitorPassApproval : System.Web.UI.Page
                 txtFullName.Text = reader["VisitorName"] is DBNull
                     ? string.Empty
                     : reader["VisitorName"].ToString();
+
+                txtMobileNumber.Text = reader["MobileNumber"] is DBNull
+                    ? string.Empty
+                    : reader["MobileNumber"].ToString();
 
                 txtCompany.Text = reader["VisitorCompany"] is DBNull
                     ? string.Empty
@@ -878,7 +882,7 @@ public partial class VisitorPassApproval : System.Web.UI.Page
         {
             SqlConnection.Close();
             SqlConnection.Open();
-            SqlCommand.CommandText = "SELECT FormID, VisitorName, VisitorCompany, Person_to_Meet, AccessLevel,Teamcode, Expected_Duration, Details_of_accessories, Legal_ID_proof, Restricted_Area, No_of_Visitors, Destination, AccessLevel, Purpose_of_Visit, Type_for_Visit,Status, Visit_FromTime,Visit_ToTime, Entered_DateTime, Breakfast, Lunch, Dinner, CabRequired, CabNotRequired FROM TblVisitorPass_Request where formid = '" + ViewState["FormID"] + "' and Visit_ToTime >= '" + DateTime.Now.ToString("yyyy-MM-dd") + "'";
+            SqlCommand.CommandText = "SELECT FormID, VisitorName, MobileNumber, VisitorCompany, Person_to_Meet, AccessLevel,Teamcode, Expected_Duration, Details_of_accessories, Legal_ID_proof, Restricted_Area, No_of_Visitors, Destination, AccessLevel, Purpose_of_Visit, Type_for_Visit,Status, Visit_FromTime,Visit_ToTime, Entered_DateTime, Breakfast, Lunch, Dinner, CabRequired, CabNotRequired FROM TblVisitorPass_Request where formid = '" + ViewState["FormID"] + "' and Visit_ToTime >= '" + DateTime.Now.ToString("yyyy-MM-dd") + "'";
             SqlCommand.Connection = SqlConnection;
             SqlDataReader dr = SqlCommand.ExecuteReader();
             if (dr.HasRows && dr.Read())
@@ -891,6 +895,7 @@ public partial class VisitorPassApproval : System.Web.UI.Page
                 ));
 
                 txtFullName.Text = dr["VisitorName"] is DBNull ? string.Empty : dr["VisitorName"].ToString();
+                txtMobileNumber.Text = dr["MobileNumber"] is DBNull ? string.Empty : dr["MobileNumber"].ToString();
                 txtCompany.Text = dr["VisitorCompany"] is DBNull ? string.Empty : dr["VisitorCompany"].ToString();
                 txtRequestedBy.Text = dr["Person_to_Meet"] is DBNull ? string.Empty : dr["Person_to_Meet"].ToString();
                 numVisitors.Text = dr["No_of_Visitors"] is DBNull ? string.Empty : dr["No_of_Visitors"].ToString();
@@ -977,6 +982,7 @@ public partial class VisitorPassApproval : System.Web.UI.Page
 
         RadAutoCompleteBox1.Enabled = false;
         txtFullName.Enabled = false;
+        txtMobileNumber.Enabled = false;
         txtCompany.Enabled = false;
         txtRequestedBy.Enabled = false;
         numVisitors.Enabled = false;
@@ -1000,6 +1006,7 @@ public partial class VisitorPassApproval : System.Web.UI.Page
     private void Funclear()
     {
         txtFullName.Text = string.Empty;
+        txtMobileNumber.Text = string.Empty;
         txtCompany.Text = string.Empty;
         tpRequestTime.Text = string.Empty;
 
