@@ -412,6 +412,8 @@
                 <asp:SqlDataSource ID="SqlDataSourcePONo" runat="server"></asp:SqlDataSource>
                 <label for="purpose">VisitorName</label>
                 <telerik:RadTextBox ID="txtFullName" runat="server" ReadOnly="true" Width="100%" />
+                <label for="purpose">Mobile Number</label>
+                <telerik:RadTextBox ID="txtMobileNumber" runat="server" ReadOnly="true" Width="100%" />
                 <label for="purpose">VisitorCompany</label>
                 <telerik:RadTextBox ID="txtCompany" runat="server" ReadOnly="true" Width="100%" />
 
@@ -562,6 +564,8 @@
                     </telerik:GridTemplateColumn>
                     <telerik:GridBoundColumn DataField="VisitorName" HeaderText="Visitor Name" UniqueName="VisitorName"
                         HeaderStyle-Width="160px" ItemStyle-Width="160px" ItemStyle-Wrap="false" />
+                    <telerik:GridBoundColumn DataField="MobileNumber" HeaderText="Mobile Number" UniqueName="MobileNumber"
+                        HeaderStyle-Width="140px" ItemStyle-Width="140px" ItemStyle-Wrap="false" />
                     <telerik:GridBoundColumn DataField="VisitorCompany" HeaderText="Company" UniqueName="VisitorCompany"
                         HeaderStyle-Width="180px" ItemStyle-Width="180px" ItemStyle-Wrap="false" />
                     <telerik:GridBoundColumn DataField="Purpose_of_Visit" HeaderText="Purpose" UniqueName="Purpose_of_Visit"
