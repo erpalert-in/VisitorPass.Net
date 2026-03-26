@@ -413,6 +413,7 @@ public partial class VisitorPassEntry : System.Web.UI.Page
 
         // Collect values from form controls
         string visitorName = txtFullName.Text.Trim();
+        string mobileNumber = txtMobileNumber.Text.Trim();
         string visitorCompany = txtCompany.Text.Trim();
         string formId = Visitorid; // or use txtFormID.Text if editing existing
 
@@ -453,6 +454,11 @@ public partial class VisitorPassEntry : System.Web.UI.Page
             if (string.IsNullOrEmpty(visitorName))
         {
             RadWindowManager1.RadAlert("Visitor Name Should not be empty.", 500, 150, "Validation Error", null);
+            return;
+        }
+        if (string.IsNullOrEmpty(mobileNumber))
+        {
+            RadWindowManager1.RadAlert("Mobile Number Should not be empty.", 500, 150, "Validation Error", null);
             return;
         }
         if (string.IsNullOrEmpty(visitorCompany))
@@ -531,6 +537,7 @@ public partial class VisitorPassEntry : System.Web.UI.Page
                     // UPDATE existing record
                     query = @"UPDATE TblVisitorPass_Request
                           SET VisitorName = @VisitorName,
+                              MobileNumber = @MobileNumber,
                               VisitorCompany = @VisitorCompany,
                               Purpose_of_Visit = @Purpose,
                               Type_for_Visit = @Type,
@@ -559,12 +566,12 @@ public partial class VisitorPassEntry : System.Web.UI.Page
                 {
                     // INSERT new record
                     query = @"INSERT INTO TblVisitorPass_Request
-                         (VisitorName, VisitorCompany, formid,
+                         (VisitorName, MobileNumber, VisitorCompany, formid,
                           Purpose_of_Visit, Type_for_Visit, Person_to_Meet, Teamcode,
                           Visit_FromTime, Visit_ToTime, Restricted_Area,
                           Expected_Duration, Details_of_accessories, Legal_ID_proof, No_of_Visitors, Entered_DateTime, Status, Breakfast, Lunch, Dinner, CabRequired, CabNotRequired, AccessLevel, Destination, Validity)
                          VALUES
-                         (@VisitorName, @VisitorCompany, @FormId,
+                         (@VisitorName, @MobileNumber, @VisitorCompany, @FormId,
                           @Purpose, @Type, @PersonToMeet, @Department,
                           @VisitFrom, @VisitTo, @RestrictedArea,
                           @Duration, @Accessories, @LegalIdProof, @NumVisitors, @enterDateTime, @status, @Breakfast, @Lunch, @Dinner, @cabRequired, @cabNotRequired, @AccessLevel, @Destination, @Validity)";
@@ -574,6 +581,7 @@ public partial class VisitorPassEntry : System.Web.UI.Page
                 {
                     // Add parameters
                     cmd.Parameters.AddWithValue("@VisitorName", visitorName);
+                    cmd.Parameters.AddWithValue("@MobileNumber", mobileNumber);
                     cmd.Parameters.AddWithValue("@VisitorCompany", visitorCompany);
                     cmd.Parameters.AddWithValue("@FormId", formId);
                     cmd.Parameters.AddWithValue("@Purpose", purpose);
@@ -724,6 +732,7 @@ public partial class VisitorPassEntry : System.Web.UI.Page
     {
 
         txtFullName.Text = string.Empty;
+        txtMobileNumber.Text = string.Empty;
         txtCompany.Text = string.Empty;
         txtpurpose.Value = string.Empty;
         txttype.Value = string.Empty;
@@ -1094,13 +1103,14 @@ public partial class VisitorPassEntry : System.Web.UI.Page
             //RadWindow2.VisibleOnPageLoad = true;
             //btnSubmit.Enabled = false;
             SqlConnection.Open();
-            SqlCommand.CommandText = "SELECT FormID, VisitorName, VisitorCompany, Person_to_Meet, AccessLevel,Teamcode, Expected_Duration, Details_of_accessories, Legal_ID_proof, Restricted_Area, No_of_Visitors, Destination, AccessLevel, Purpose_of_Visit, Type_for_Visit,Status, Visit_FromTime,Visit_ToTime, Entered_DateTime, Breakfast, Lunch, Dinner, CabRequired, CabNotRequired,Validity FROM TblVisitorPass_Request where formid = '" + ViewState["FormID"] + "' and Visit_ToTime >= '" + DateTime.Now.ToString("yyyy-MM-dd") + "'";
+            SqlCommand.CommandText = "SELECT FormID, VisitorName, MobileNumber, VisitorCompany, Person_to_Meet, AccessLevel,Teamcode, Expected_Duration, Details_of_accessories, Legal_ID_proof, Restricted_Area, No_of_Visitors, Destination, AccessLevel, Purpose_of_Visit, Type_for_Visit,Status, Visit_FromTime,Visit_ToTime, Entered_DateTime, Breakfast, Lunch, Dinner, CabRequired, CabNotRequired,Validity FROM TblVisitorPass_Request where formid = '" + ViewState["FormID"] + "' and Visit_ToTime >= '" + DateTime.Now.ToString("yyyy-MM-dd") + "'";
             SqlCommand.Connection = SqlConnection;
             SqlDataReader dr = SqlCommand.ExecuteReader();
             if (dr.HasRows && dr.Read())
             {
                 txtFormID.Text = dr["FormID"].ToString();
                 txtFullName.Text = dr["VisitorName"].ToString();
+                txtMobileNumber.Text = dr["MobileNumber"] != DBNull.Value ? dr["MobileNumber"].ToString() : string.Empty;
                 txtCompany.Text = dr["VisitorCompany"].ToString();
                 txtPersonToMeet.Text = dr["Person_to_Meet"].ToString();
                 txtDepartment.Text = dr["Teamcode"].ToString();
@@ -1181,6 +1191,7 @@ public partial class VisitorPassEntry : System.Web.UI.Page
     {
         txtFormID.Enabled = false;
         txtFullName.Enabled = false;
+        txtMobileNumber.Enabled = false;
         txtCompany.Enabled = false;
         txtPersonToMeet.Enabled = false;
         txtDepartment.Enabled = false;

@@ -314,6 +314,11 @@
 
                 <label for="purpose">Full Name *</label>
                 <telerik:RadTextBox ID="txtFullName" runat="server" Width="100%" />
+                <label for="purpose">Mobile Number *</label>
+                <telerik:RadNumericTextBox ID="txtMobileNumber" runat="server" Width="100%"
+                    Type="Number" NumberFormat-DecimalDigits="0" NumberFormat-GroupSeparator=""
+                    MinValue="0" MaxValue="9999999999" MaxLength="10"
+                    EmptyMessage="Enter 10-digit mobile number" />
                 <label for="purpose">Company/Organization *</label>
                 <telerik:RadTextBox ID="txtCompany" runat="server" Width="100%" />
                 <div class="form-section">
@@ -515,6 +520,8 @@
                     </telerik:GridTemplateColumn>
                     <telerik:GridBoundColumn DataField="VisitorName" HeaderText="Visitor Name" UniqueName="VisitorName"
                         HeaderStyle-Width="160px" ItemStyle-Width="160px" ItemStyle-Wrap="false" />
+                    <telerik:GridBoundColumn DataField="MobileNumber" HeaderText="Mobile Number" UniqueName="MobileNumber"
+                        HeaderStyle-Width="140px" ItemStyle-Width="140px" ItemStyle-Wrap="false" />
                     <telerik:GridBoundColumn DataField="VisitorCompany" HeaderText="Company" UniqueName="VisitorCompany"
                         HeaderStyle-Width="180px" ItemStyle-Width="180px" ItemStyle-Wrap="false" />
                     <telerik:GridBoundColumn DataField="Purpose_of_Visit" HeaderText="Purpose" UniqueName="Purpose_of_Visit"
